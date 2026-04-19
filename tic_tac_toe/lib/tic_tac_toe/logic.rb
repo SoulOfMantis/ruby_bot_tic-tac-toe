@@ -3,20 +3,22 @@ module TicTacToe
     def self.valid_move?(board, position)
       position.between?(0,8) && board[position] == " "
     end
-        
-    # Функция проверки победы
+    def self.create_board
+      Array.new(3) { Array.new(3, nil) }
+    end
     def self.check_winner(board)
-      wins = [
-        [0,1,2], [3,4,5], [6,7,8],
-        [0,3,6], [1,4,7], [2,5,8],
-        [0,4,8], [2,4,6]
+      lines = [
+        [[0,0], [0,1], [0,2]], [[1,0], [1,1], [1,2]], [[2,0], [2,1], [2,2]],
+        [[0,0], [1,0], [2,0]], [[0,1], [1,1], [2,1]], [[0,2], [1,2], [2,2]],
+        [[0,0], [1,1], [2,2]], [[0,2], [1,1], [2,0]]
       ]
-      wins.each do |line|
-        if board[line[0]] != " " && board[line[0]] == board[line[1]] && board[line[1]] == board[line[2]]
-          return board[line[0]]
-        end
+
+      lines.each do |line|
+        values = line.map { |r, c| board[r][c] }
+        return values.first if values.uniq.count == 1 && !values.first.nil?
       end
-      nil
+
+      nil 
     end
   end
 end
