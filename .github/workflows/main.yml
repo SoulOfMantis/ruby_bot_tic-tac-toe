@@ -1,9 +1,10 @@
 name: Ruby
 on:
-    push:
-    branches: [ "main" ]
+  push:
+    branches:
+      - 
+
   pull_request:
-    branches: [ "main" ]
 
   build:
     runs-on: ubuntu-latest
