@@ -1,7 +1,7 @@
 PATH
   remote: .
   specs:
-    tic-tac-toe (0.1.0)
+    tic_tac_toe (0.1.0)
 
 GEM
   remote: https://rubygems.org/
@@ -85,7 +85,7 @@ DEPENDENCIES
   minitest (~> 5.16)
   rake (~> 13.0)
   telegram-bot-ruby
-  tic-tac-toe!
+  tic_tac_toe!
 
 BUNDLED WITH
    2.6.9
