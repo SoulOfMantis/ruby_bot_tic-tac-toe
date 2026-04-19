@@ -1,12 +1,8 @@
 # frozen_string_literal: true
 
-require_relative "toe/version"
+require_relative "tic_tac_toe/version"
 
-module Tic
-  module Tac
-    module Toe
+module TicTacToe
       class Error < StandardError; end
       # Your code goes here...
-    end
-  end
 end

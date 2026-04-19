@@ -1,10 +1,10 @@
 # frozen_string_literal: true
 
-require_relative "lib/tic/tac/toe/version"
+require_relative "lib/tic_tac_toe"
 
 Gem::Specification.new do |spec|
-  spec.name = "tic-tac-toe"
-  spec.version = Tic::Tac::Toe::VERSION
+  spec.name = "tic_tac_toe"
+  spec.version = TicTacToe::VERSION
   spec.authors = ["TODO: Write your name"]
   spec.email = ["TODO: Write your email address"]
 
