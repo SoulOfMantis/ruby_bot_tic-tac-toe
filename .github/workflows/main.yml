@@ -1,5 +1,4 @@
 name: Ruby
-
 on:
   push:
     branches:
@@ -7,7 +6,6 @@ on:
 
   pull_request:
 
-jobs:
   build:
     runs-on: ubuntu-latest
     name: Ruby ${{ matrix.ruby }}
