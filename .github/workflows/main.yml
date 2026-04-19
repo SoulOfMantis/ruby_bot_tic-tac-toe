@@ -2,7 +2,7 @@ name: Ruby
 
 on:
   push:
-    branches: [ "main" ]
+    branches: [ "main", "implement-github-actions" ]
   pull_request:
     branches: [ "main" ]
 
