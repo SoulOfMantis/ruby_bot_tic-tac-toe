@@ -1,23 +1,25 @@
-require 'telegram/bot'
-require_relative '../lib/tic_tac_toe/bot'
-require_relative '../lib/tic_tac_toe/logic'
+#!/usr/bin/env ruby
 
-TOKEN = '5616316860:AAFT04ivilzGhllX-IliCYN3mBB-FpcpRBo'
+require 'telegram/bot'
+require 'tic_tac_toe/bot'
+require 'tic_tac_toe/logic'
+
+token = '5616316860:AAFtO4ivilzGhlLX-IliCYN3mBB-FpcpRBo'
 
 $game_board ||= TicTacToe::Logic.create_board 
 
-Telegram::Bot::Client.run(TOKEN) do |bot|
+Telegram::Bot::Client.run(token) do |bot|
   bot.listen do |rq|
-    begin
-      case rq
-      when Telegram::Bot::Types::Message
-        if rq.text == '/start'
-          $game_board = TicTacToe::Logic.create_board 
+    case rq
+    when Telegram::Bot::Types::Message
+      unless rq.nil?
+        if rq.text.include? '/start'
+          $game_board = TicTacToe::Logic.create_board
           kb = TicTacToe::Bot.game_keyboard($game_board)
           bot.api.send_message(chat_id: rq.chat.id, text: "Игра началась! Твой ход:", reply_markup: kb)
         end
-
-      when Telegram::Bot::Types::CallbackQuery
+      end
+    when Telegram::Bot::Types::CallbackQuery
         data = rq.data.split('_')
         row, col = data[1].to_i, data[2].to_i
 
@@ -32,31 +34,26 @@ Telegram::Bot::Client.run(TOKEN) do |bot|
               end
             end
           end
+        end
 
           new_kb = TicTacToe::Bot.game_keyboard($game_board)
           bot.api.edit_message_reply_markup(
             chat_id: rq.message.chat.id,
             message_id: rq.message.message_id,
-            reply_markup: new_kb
-          )
+            reply_markup: new_kb)
         winner = TicTacToe::Logic.check_winner($game_board)
         if winner
           bot.api.send_message(
-            chat_id: rq.message.chat.id, 
+            chat_id: rq.message.chat.id,
             text: "Игра окончена! Победитель: #{winner == 'X' ? 'Ты (❌)' : 'Бот (⭕)'}"
           )
           $game_board = TicTacToe::Logic.create_board
         elsif !$game_board.flatten.include?(nil)
           bot.api.send_message(chat_id: rq.message.chat.id, text: "Ничья! 🤝")
           $game_board = TicTacToe::Logic.create_board
-        end
-          bot.api.answer_callback_query(callback_query_id: rq.id)
         else
           bot.api.answer_callback_query(callback_query_id: rq.id, text: "Занято!", show_alert: true)
         end
-      end
-    rescue => e
-      puts "ОШИБКА: #{e.message}"
     end
   end
 end
