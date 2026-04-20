@@ -2,8 +2,7 @@
 
 require 'dotenv'
 require 'telegram/bot'
-require 'tic_tac_toe/bot'
-require 'tic_tac_toe/logic'
+require 'tic_tac_toe'
 
 Dotenv.load
 token = ENV['TELEGRAM_BOT_TOKEN']
