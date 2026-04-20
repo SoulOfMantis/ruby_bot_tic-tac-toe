@@ -1,0 +1,61 @@
+#!/usr/bin/env ruby
+
+require 'dotenv'
+require 'telegram/bot'
+require 'tic_tac_toe/bot'
+require 'tic_tac_toe/logic'
+
+Dotenv.load
+token = ENV['TELEGRAM_BOT_TOKEN']
+
+$game_board ||= TicTacToe::Logic.create_board 
+
+Telegram::Bot::Client.run(token) do |bot|
+  bot.listen do |rq|
+    case rq
+    when Telegram::Bot::Types::Message
+      unless rq.nil?
+        if rq.text.include? '/start'
+          $game_board = TicTacToe::Logic.create_board
+          kb = TicTacToe::Bot.game_keyboard($game_board)
+          bot.api.send_message(chat_id: rq.chat.id, text: "Игра началась! Твой ход:", reply_markup: kb)
+        end
+      end
+    when Telegram::Bot::Types::CallbackQuery
+        data = rq.data.split('_')
+        row, col = data[1].to_i, data[2].to_i
+
+        if $game_board[row][col].nil?
+          $game_board[row][col] = 'X'
+          found = false
+          $game_board.each_with_index do |r, r_idx|
+            r.each_with_index do |cell, c_idx|
+              if cell.nil? && !found
+                $game_board[r_idx][c_idx] = 'O'
+                found = true
+              end
+            end
+          end
+        end
+
+          new_kb = TicTacToe::Bot.game_keyboard($game_board)
+          bot.api.edit_message_reply_markup(
+            chat_id: rq.message.chat.id,
+            message_id: rq.message.message_id,
+            reply_markup: new_kb)
+        winner = TicTacToe::Logic.check_winner($game_board)
+        if winner
+          bot.api.send_message(
+            chat_id: rq.message.chat.id,
+            text: "Игра окончена! Победитель: #{winner == 'X' ? 'Ты (❌)' : 'Бот (⭕)'}"
+          )
+          $game_board = TicTacToe::Logic.create_board
+        elsif !$game_board.flatten.include?(nil)
+          bot.api.send_message(chat_id: rq.message.chat.id, text: "Ничья! 🤝")
+          $game_board = TicTacToe::Logic.create_board
+        else
+          bot.api.answer_callback_query(callback_query_id: rq.id, text: "Занято!", show_alert: true)
+        end
+    end
+  end
+end
