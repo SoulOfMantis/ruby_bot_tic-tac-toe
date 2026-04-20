@@ -24,12 +24,14 @@ module TicTacToe
   end
 
   class GameState
-    attr_accessor :board, :current_player, :players
+    attr_accessor :board, :current_player, :players, :chat_id, :message_id
 
     def initialize(first_player_id)
       @board = Logic.create_board
       @current_player = 'X'
       @players = { 'X' => first_player_id, 'O' => nil }
+      @chat_id = nil
+      @message_id = nil
     end
 
     def join_second_player(user_id)

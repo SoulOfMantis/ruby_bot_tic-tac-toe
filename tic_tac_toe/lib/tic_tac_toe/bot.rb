@@ -2,113 +2,82 @@ require 'telegram/bot'
 
 module TicTacToe
   class Bot
-    # Метод для создания клавиатуры
-    def self.game_keyboard(board)
-      kb = board.each_with_index.map do |row_array, row_idx|
-        row_array.each_with_index.map do |cell, col_idx|
-          label = cell.nil? ? " " : cell
-          Telegram::Bot::Types::InlineKeyboardButton.new(
-            text: label,
-            callback_data: "move_#{row_idx}_#{col_idx}"
-          )
-        end
-      end
-      Telegram::Bot::Types::InlineKeyboardMarkup.new(inline_keyboard: kb)
+    def initialize(token)
+      @token = token
+      @games = {} 
     end
 
-    # Основной метод запуска бота
-    def self.run
-      token = ENV['TELEGRAM_BOT_TOKEN']
-      @games ||= {} 
-
-      Telegram::Bot::Client.run(token) do |bot|
+    def run
+      Telegram::Bot::Client.run(@token) do |bot|
         bot.listen do |rq|
           case rq
-
           when Telegram::Bot::Types::Message
-            next if rq.text.nil?
-
-            if rq.text.include?('/start')
-              chat_id = rq.chat.id
-              game = TicTacToe::GameState.new(rq.from.id)
-              @games[chat_id] = game # Используем @
-
-              kb = game_keyboard(game.board)
-              bot.api.send_message(
-                chat_id: chat_id,
-                text: "Игра началась! ❌ ходит первым.\nВторой игрок может присоединиться ⭕, сделав ход.",
-                reply_markup: kb
-              )
-            end
-
+            handle_start(bot, rq) if rq.text&.include?('/start')
           when Telegram::Bot::Types::CallbackQuery
-            chat_id = rq.message.chat.id
-            user_id = rq.from.id
-            game = @games[chat_id] # Используем @
-
-            unless game
-              bot.api.answer_callback_query(
-                callback_query_id: rq.id,
-                text: "Начни игру через /start",
-                show_alert: true
-              )
-              next
-            end
-
-            data = rq.data.split('_')
-            row = data[1].to_i
-            col = data[2].to_i
-
-            game.join_second_player(user_id)
-
-            unless game.current_player?(user_id)
-              bot.api.answer_callback_query(
-                callback_query_id: rq.id,
-                text: "Сейчас не твой ход!",
-                show_alert: true
-              )
-              next
-            end
-
-            unless game.cell_empty?(row, col)
-              bot.api.answer_callback_query(
-                callback_query_id: rq.id,
-                text: "Клетка занята!",
-                show_alert: true
-              )
-              next
-            end
-
-            game.make_move(row, col)
-            new_kb = game_keyboard(game.board)
-
-            bot.api.edit_message_reply_markup(
-              chat_id: chat_id,
-              message_id: rq.message.message_id,
-              reply_markup: new_kb
-            )
-
-            winner = game.winner
-            if winner
-              bot.api.send_message(
-                chat_id: chat_id,
-                text: "Победил #{winner == 'X' ? '❌' : '⭕'}!"
-              )
-              @games.delete(chat_id)
-            elsif game.draw?
-              bot.api.send_message(
-                chat_id: chat_id,
-                text: "Ничья! 🤝"
-              )
-              @games.delete(chat_id)
-            else
-              game.switch_player
-            end
-
-            bot.api.answer_callback_query(callback_query_id: rq.id)
+            handle_move(bot, rq)
           end
         end
       end
+    end
+
+    private
+
+    def handle_start(bot, rq)
+      chat_id = rq.chat.id
+      
+      game = TicTacToe::GameState.new(rq.from.id)
+      game.chat_id = chat_id 
+      
+      msg = bot.api.send_message(
+        chat_id: chat_id,
+        text: "Игра началась! ❌ ходит первым.",
+        reply_markup: render_keyboard(game.board)
+      )
+
+      game.message_id = msg['result']['message_id']
+      @games[chat_id] = game
+    end
+
+    def handle_move(bot, rq)
+      chat_id = rq.message.chat.id
+      game = @games[chat_id]
+      return unless game
+
+      data = rq.data.split('_')
+      row, col = data[1].to_i, data[2].to_i
+
+      if game.can_move?(rq.from.id, row, col)
+        game.make_move(row, col)
+        
+        bot.api.edit_message_reply_markup(
+          chat_id: game.chat_id,
+          message_id: game.message_id,
+          reply_markup: render_keyboard(game.board)
+        )
+
+        check_winner(bot, game)
+      end
+      
+      bot.api.answer_callback_query(callback_query_id: rq.id)
+    end
+
+    def check_winner(bot, game)
+      if game.winner || game.draw?
+        text = game.winner ? "Победил #{game.winner == 'X' ? '❌' : '⭕'}!" : "Ничья! 🤝"
+        bot.api.send_message(chat_id: game.chat_id, text: text)
+        @games.delete(game.chat_id)
+      else
+        game.switch_player
+      end
+    end
+
+    def render_keyboard(board)
+      kb = board.each_with_index.map do |row, r_idx|
+        row.each_with_index.map do |cell, c_idx|
+          Telegram::Bot::Types::InlineKeyboardButton.new(text: cell || " ", callback_data: "move_#{r_idx}_#{c_idx}")
+        end
+      end
+      Telegram::Bot::Types::InlineKeyboardMarkup.new(inline_keyboard: kb)
     end
   end
 end
