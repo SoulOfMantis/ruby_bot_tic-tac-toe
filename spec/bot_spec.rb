@@ -1,5 +1,6 @@
 require 'telegram/bot'
-require_relative '../tic_tac_toe/lib/tic_tac_toe/bot'
+require 'tic_tac_toe/bot'
+require 'rspec'
 
 RSpec.describe TicTacToe::Bot do
   describe '.handle_user' do
