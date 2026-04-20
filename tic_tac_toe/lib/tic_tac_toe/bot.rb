@@ -9,6 +9,7 @@ module TicTacToe
 
     def run
       Telegram::Bot::Client.run(@token) do |bot|
+        puts "Бот успешно запущен"
         bot.listen do |rq|
           case rq
           when Telegram::Bot::Types::Message
