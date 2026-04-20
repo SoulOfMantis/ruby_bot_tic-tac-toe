@@ -35,7 +35,7 @@ module TicTacToe
         reply_markup: render_keyboard(game.board)
       )
 
-      game.message_id = msg['result']['message_id']
+      game.message_id = msg.message_id
       @games[chat_id] = game
     end
 

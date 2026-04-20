@@ -5,5 +5,6 @@ require 'telegram/bot'
 require 'tic_tac_toe/bot'
 require 'tic_tac_toe/logic'
 
+Dotenv.load
 token = ENV['TELEGRAM_BOT_TOKEN']
 TicTacToe::Bot.new(token).run
