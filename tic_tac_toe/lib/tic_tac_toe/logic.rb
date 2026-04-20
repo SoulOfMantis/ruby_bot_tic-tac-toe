@@ -1,24 +1,69 @@
 module TicTacToe
   class Logic
-    def self.valid_move?(board, position)
-      position.between?(0,8) && board[position] == " "
-    end
     def self.create_board
       Array.new(3) { Array.new(3, nil) }
     end
+
     def self.check_winner(board)
-      lines = [
-        [[0,0], [0,1], [0,2]], [[1,0], [1,1], [1,2]], [[2,0], [2,1], [2,2]],
-        [[0,0], [1,0], [2,0]], [[0,1], [1,1], [2,1]], [[0,2], [1,2], [2,2]],
-        [[0,0], [1,1], [2,2]], [[0,2], [1,1], [2,0]]
-      ]
+      lines = []
+
+      board.each { |row| lines << row }
+
+      board.transpose.each { |col| lines << col }
+
+      lines << [board[0][0], board[1][1], board[2][2]]
+      lines << [board[0][2], board[1][1], board[2][0]]
 
       lines.each do |line|
-        values = line.map { |r, c| board[r][c] }
-        return values.first if values.uniq.count == 1 && !values.first.nil?
+        return 'X' if line.all? { |cell| cell == 'X' }
+        return 'O' if line.all? { |cell| cell == 'O' }
       end
 
-      nil 
+      nil
+    end
+  end
+
+  class GameState
+    attr_accessor :board, :current_player, :players
+
+    def initialize(first_player_id)
+      @board = Logic.create_board
+      @current_player = 'X'
+      @players = { 'X' => first_player_id, 'O' => nil }
+    end
+
+    def join_second_player(user_id)
+      if @players['O'].nil? && user_id != @players['X']
+        @players['O'] = user_id
+      end
+    end
+
+    def current_player?(user_id)
+      @players[@current_player] == user_id
+    end
+
+    def cell_empty?(row, col)
+      @board[row][col].nil?
+    end
+
+    def make_move(row, col)
+      @board[row][col] = @current_player
+    end
+
+    def switch_player
+      @current_player = (@current_player == 'X' ? 'O' : 'X')
+    end
+
+    def winner
+      Logic.check_winner(@board)
+    end
+
+    def draw?
+      !@board.flatten.include?(nil)
+    end
+
+    def finished?
+      winner || draw?
     end
   end
 end
