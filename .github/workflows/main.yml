@@ -2,11 +2,9 @@ name: Ruby
 
 on:
   push:
-    branches:
-      - 
-
+    branches: [ main, implement-github-actions ]
   pull_request:
-
+    branches: [ main ]
 jobs:
   build:
     runs-on: ubuntu-latest

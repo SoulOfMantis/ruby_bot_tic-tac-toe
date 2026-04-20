@@ -1,0 +1,9 @@
+#!/usr/bin/env ruby
+
+require 'dotenv'
+require 'telegram/bot'
+require 'tic_tac_toe'
+
+Dotenv.load
+token = ENV['TELEGRAM_BOT_TOKEN']
+TicTacToe::Bot.new(token).run
