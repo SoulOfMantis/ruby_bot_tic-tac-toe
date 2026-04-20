@@ -49,6 +49,7 @@
     <orderEntry type="library" scope="PROVIDED" name="telegram-bot-ruby (v2.7.0, ruby-3.4.8-p72) [gem]" level="application" />
     <orderEntry type="library" scope="PROVIDED" name="tsort (v0.2.0, ruby-3.4.8-p72) [gem]" level="application" />
     <orderEntry type="library" scope="PROVIDED" name="uri (v1.1.1, ruby-3.4.8-p72) [gem]" level="application" />
+    <orderEntry type="library" scope="PROVIDED" name="yaml (v0.4.0, ruby-3.4.8-p72) [gem]" level="application" />
     <orderEntry type="library" scope="PROVIDED" name="zeitwerk (v2.7.5, ruby-3.4.8-p72) [gem]" level="application" />
   </component>
 </module>
