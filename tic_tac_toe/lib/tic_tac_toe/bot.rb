@@ -1,5 +1,6 @@
 require 'telegram/bot'
 require_relative 'logic'
+require 'yaml'
 
 module TicTacToe
   class Bot
@@ -11,6 +12,8 @@ module TicTacToe
 
     def run
       Telegram::Bot::Client.run(@token) do |bot|
+        load_stats
+        @stats = {} unless @stats
         bot.listen do |rq|
           user = rq.from
           case rq
@@ -20,8 +23,8 @@ module TicTacToe
             chat_id = rq.message.chat.id
           end
           @stats[chat_id] = {} unless @stats[chat_id]
-          @stats[chat_id][:general_stats] = {total_games_started: 0, total_games_completed: 0, total_draws: 0,
-                                             champion: nil, last_winner: nil, last_loser: nil, waiting_for_game_start: nil} unless @stats[chat_id][:general_stats]
+          @stats[chat_id][:general_stats] = {total_games_started: 0, total_games_completed: 0, total_draws: 0} unless @stats[chat_id][:general_stats]
+          update_stats
           case rq
           when Telegram::Bot::Types::Message
             unless rq.text.nil?
@@ -30,9 +33,9 @@ module TicTacToe
               elsif rq.text.include? '/my_stats'
                 stats = @stats[chat_id][user.id]
                 if stats
-                  is_champion = @stats[chat_id][:general_stats][:champion] == user
-                  is_last_winner = @stats[chat_id][:general_stats][:last_winner] == user
-                  is_last_loser = @stats[chat_id][:general_stats][:last_loser] == user
+                  is_champion = @stats[chat_id][:general_stats][:champion] == user.id
+                  is_last_winner = @stats[chat_id][:general_stats][:last_winner] == user.id
+                  is_last_loser = @stats[chat_id][:general_stats][:last_loser] == user.id
                   text = "Начато игр: #{stats[:games_started]}, завершено игр: #{stats[:games_completed]}."
                   if stats[:games_completed] != 0
                     text += "\nПобеды: #{stats[:wins]}, поражения: #{stats[:losses]}, ничьи: #{stats[:draws]}."+
@@ -51,9 +54,12 @@ module TicTacToe
                   bot.api.send_message chat_id: chat_id, text:
                     "Начато игр: #{stats[:total_games_started]}, завершено игр: #{stats[:total_games_completed]}." +
                       "\nСыграно вничью: #{stats[:total_draws]}." +
-                      "\n#{stats[:champion] ? "@#{stats[:champion].username} -- чемпион этой группы!" : 'В этой группе пока нет чемпиона...'}" +
-                      "#{stats[:last_winner] ? "\n@#{stats[:last_winner].username} -- последний, кто одержал победу в этой группе!" : nil}" +
-                      "#{stats[:last_loser] ? "\n@#{stats[:last_loser].username} -- последний, кто потерпел поражение в этой группе!" : nil}"
+                      "\n#{stats[:champion] ? "@#{bot.api.get_chat_member(chat_id: chat_id, user_id: stats[:champion]).user.username} -- чемпион этой группы!"
+                             : 'В этой группе пока нет чемпиона...'}" +
+                      "#{stats[:last_winner] ? "\n@#{bot.api.get_chat_member(chat_id: chat_id, user_id: stats[:last_winner]).user.username} -- последний, кто одержал победу в этой группе!"
+                           : nil}" +
+                      "#{stats[:last_loser] ? "\n@#{bot.api.get_chat_member(chat_id: chat_id, user_id: stats[:last_loser]).user.username} -- последний, кто потерпел поражение в этой группе!"
+                           : nil}"
                 else
                   bot.api.send_message chat_id: chat_id, text: "В этой группе не проходило игр!"
                 end
@@ -76,18 +82,30 @@ module TicTacToe
 
     private
 
+    def update_stats
+      File.write 'stats.yml', @stats.to_yaml
+    end
+
+    def load_stats
+      @stats = YAML.load_file 'stats.yml'
+    end
+
     def waiting_for_game_start(bot, user, chat_id)
-      return 'Вы уже в очереди!' if @stats[chat_id][:waiting_for_game_start] == user
+      return 'Вы уже в очереди!' if @stats[chat_id][:waiting_for_game_start] == user.id
       unless @stats[chat_id][:waiting_for_game_start]
-        @stats[chat_id][:waiting_for_game_start] = user
+        @stats[chat_id][:waiting_for_game_start] = user.id
+        update_stats
         b = Telegram::Bot::Types::InlineKeyboardButton.new text: "Присоединиться", callback_data: "join"
         kb = Telegram::Bot::Types::InlineKeyboardMarkup.new inline_keyboard: [[b]]
-        bot.api.send_message chat_id:chat_id, text: "#{user.first_name} желает начать игру!", reply_markup: kb
+        bot.api.send_message chat_id:chat_id,
+                             text: "#{bot.api.get_chat_member(chat_id: chat_id, user_id: @stats[chat_id][:waiting_for_game_start]).user.first_name} желает начать игру!",
+                             reply_markup: kb
         return 'Добавлены в очередь!'
       end
       return 'В этом чате уже идёт игра!' if @games[chat_id]
-      handle_start(bot, chat_id, @stats[chat_id][:waiting_for_game_start], user)
+      handle_start(bot, chat_id, bot.api.get_chat_member(chat_id: chat_id, user_id: @stats[chat_id][:waiting_for_game_start]).user, user)
       @stats[chat_id].delete :waiting_for_game_start
+      update_stats
       "Успешно присоединились к игре с #{@games[chat_id].name_x}!"
     end
 
@@ -98,6 +116,7 @@ module TicTacToe
       @stats[chat_id][player_x.id][:games_started]+=1
       @stats[chat_id][player_o.id][:games_started]+=1
       @stats[chat_id][:general_stats][:total_games_started] += 1
+      update_stats
 
       game = TicTacToe::GameState.new player_x, player_o, chat_id
 
@@ -158,15 +177,17 @@ module TicTacToe
         @stats[chat_id][game.player_x.id][:draws] += 1
         @stats[chat_id][game.player_o.id][:draws] += 1
         @stats[chat_id][:general_stats][:total_draws] += 1
+        update_stats
       else
 
         winner  = game.winner == 'X' ? game.player_x : game.player_o
         loser  = game.winner == 'X' ? game.player_o : game.player_x
         @stats[chat_id][winner.id][:wins] += 1
-        @stats[chat_id][:general_stats][:last_winner] = winner
+        @stats[chat_id][:general_stats][:last_winner] = winner.id
         @stats[chat_id][loser.id][:losses] += 1
-        @stats[chat_id][:general_stats][:last_loser] = loser
-        @stats[chat_id][:general_stats][:champion] = winner if @stats[chat_id][:general_stats][:champion].nil? || @stats[chat_id][:general_stats][:champion] == loser
+        @stats[chat_id][:general_stats][:last_loser] = loser.id
+        @stats[chat_id][:general_stats][:champion] = winner.id if @stats[chat_id][:general_stats][:champion].nil? || @stats[chat_id][:general_stats][:champion] == loser.id
+        update_stats
         win_icon  = game.winner == 'X' ? '❌' : '⭕'
         lose_icon = game.winner == 'X' ? '⭕' : '❌'
 
