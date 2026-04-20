@@ -1,10 +1,12 @@
 #!/usr/bin/env ruby
 
+require 'dotenv'
 require 'telegram/bot'
 require 'tic_tac_toe/bot'
 require 'tic_tac_toe/logic'
 
-token = '5616316860:AAFtO4ivilzGhlLX-IliCYN3mBB-FpcpRBo'
+Dotenv.load
+token = ENV['TELEGRAM_BOT_TOKEN']
 
 $game_board ||= TicTacToe::Logic.create_board 
 

@@ -15,6 +15,7 @@
     <orderEntry type="library" scope="PROVIDED" name="bundler (v2.6.9, ruby-3.4.8-p72) [gem]" level="application" />
     <orderEntry type="library" scope="PROVIDED" name="concurrent-ruby (v1.3.6, ruby-3.4.8-p72) [gem]" level="application" />
     <orderEntry type="library" scope="PROVIDED" name="date (v3.5.1, ruby-3.4.8-p72) [gem]" level="application" />
+    <orderEntry type="library" scope="PROVIDED" name="dotenv (v3.2.0, ruby-3.4.8-p72) [gem]" level="application" />
     <orderEntry type="library" scope="PROVIDED" name="dry-core (v1.2.0, ruby-3.4.8-p72) [gem]" level="application" />
     <orderEntry type="library" scope="PROVIDED" name="dry-inflector (v1.3.1, ruby-3.4.8-p72) [gem]" level="application" />
     <orderEntry type="library" scope="PROVIDED" name="dry-logic (v1.6.0, ruby-3.4.8-p72) [gem]" level="application" />
