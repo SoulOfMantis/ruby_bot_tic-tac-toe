@@ -1,3 +1,5 @@
+# frozen_string_literal: true
+
 require 'telegram/bot'
 require 'tic_tac_toe/bot'
 require 'rspec'
@@ -7,7 +9,7 @@ RSpec.describe TicTacToe::Bot do
     it 'правильно извлекает данные пользователя через мокап' do
       message = double('Telegram::Bot::Types::Message')
       user = double('User', first_name: 'Mawa', username: 'mawa_dev')
-      chat = double('Chat', id: 12345)
+      chat = double('Chat', id: 12_345)
 
       allow(message).to receive(:from).and_return(user)
       allow(message).to receive(:chat).and_return(chat)
@@ -15,7 +17,7 @@ RSpec.describe TicTacToe::Bot do
       result = TicTacToe::Bot.handle_user(message)
 
       expect(result[:name]).to eq('Mawa')
-      expect(result[:id]).to eq(12345)
+      expect(result[:id]).to eq(12_345)
     end
   end
 end
