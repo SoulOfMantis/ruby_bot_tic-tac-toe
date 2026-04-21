@@ -1,3 +1,5 @@
+# frozen_string_literal: true
+
 require 'telegram/bot'
 
 module TicTacToe
@@ -5,7 +7,7 @@ module TicTacToe
     attr_accessor :board, :current_player, :player_x, :player_o, :winner, :chat_id, :message_id
 
     def initialize(player_x, player_o, chat_id)
-      @board = Array.new(3) { Array.new(3, nil) }
+      @board = Array.new(3) { Array.new 3, nil }
       @current_player = 'X'
       @player_x = player_x
       @player_o = player_o
@@ -17,6 +19,7 @@ module TicTacToe
     def name_x
       player_x.first_name
     end
+
     def name_o
       player_o.first_name
     end
@@ -24,13 +27,14 @@ module TicTacToe
     def username_x
       player_x.username
     end
+
     def username_o
       player_o.username
     end
 
     def valid_turn?(user)
-      return false if @winner 
-      
+      return false if @winner
+
       if @current_player == 'X'
         @player_x == user
       else
@@ -50,8 +54,8 @@ module TicTacToe
     def check_winner
       lines = []
       3.times do |i|
-        lines << @board[i] 
-        lines << [@board[0][i], @board[1][i], @board[2][i]] 
+        lines << @board[i]
+        lines << [@board[0][i], @board[1][i], @board[2][i]]
       end
       lines << [@board[0][0], @board[1][1], @board[2][2]]
       lines << [@board[0][2], @board[1][1], @board[2][0]]
@@ -61,6 +65,7 @@ module TicTacToe
         return 'O' if line.all? { |cell| cell == 'O' }
       end
       return 'Draw' if @board.flatten.none?(&:nil?)
+
       nil
     end
   end

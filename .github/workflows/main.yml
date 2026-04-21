@@ -2,7 +2,7 @@ name: Ruby
 
 on:
   push:
-    branches: [ main, implement-github-actions ]
+    branches: [ main ]
   pull_request:
     branches: [ main ]
 jobs:
@@ -21,5 +21,8 @@ jobs:
         with:
           ruby-version: ${{ matrix.ruby }}
           bundler-cache: true
-      - name: Run the default task
-        run: bundle exec rake
+      - name: Run tests
+        run: bundle exec rake spec
+      - name: Run rubocop
+        run: bundle exec rake rubocop:autocorrect
+

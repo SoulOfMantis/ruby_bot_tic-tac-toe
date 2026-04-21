@@ -11,6 +11,7 @@
     </content>
     <orderEntry type="jdk" jdkName="ruby-3.4.8-p72" jdkType="RUBY_SDK" />
     <orderEntry type="sourceFolder" forTests="false" />
+    <orderEntry type="library" scope="PROVIDED" name="ast (v2.4.3, ruby-3.4.8-p72) [gem]" level="application" />
     <orderEntry type="library" scope="PROVIDED" name="bigdecimal (v4.1.2, ruby-3.4.8-p72) [gem]" level="application" />
     <orderEntry type="library" scope="PROVIDED" name="bundler (v2.6.9, ruby-3.4.8-p72) [gem]" level="application" />
     <orderEntry type="library" scope="PROVIDED" name="concurrent-ruby (v1.3.6, ruby-3.4.8-p72) [gem]" level="application" />
@@ -30,24 +31,36 @@
     <orderEntry type="library" scope="PROVIDED" name="io-console (v0.8.2, ruby-3.4.8-p72) [gem]" level="application" />
     <orderEntry type="library" scope="PROVIDED" name="irb (v1.17.0, ruby-3.4.8-p72) [gem]" level="application" />
     <orderEntry type="library" scope="PROVIDED" name="json (v2.19.3, ruby-3.4.8-p72) [gem]" level="application" />
+    <orderEntry type="library" scope="PROVIDED" name="language_server-protocol (v3.17.0.5, ruby-3.4.8-p72) [gem]" level="application" />
+    <orderEntry type="library" scope="PROVIDED" name="lint_roller (v1.1.0, ruby-3.4.8-p72) [gem]" level="application" />
     <orderEntry type="library" scope="PROVIDED" name="logger (v1.7.0, ruby-3.4.8-p72) [gem]" level="application" />
     <orderEntry type="library" scope="PROVIDED" name="multipart-post (v2.4.1, ruby-3.4.8-p72) [gem]" level="application" />
     <orderEntry type="library" scope="PROVIDED" name="net-http (v0.9.1, ruby-3.4.8-p72) [gem]" level="application" />
+    <orderEntry type="library" scope="PROVIDED" name="parallel (v2.0.1, ruby-3.4.8-p72) [gem]" level="application" />
+    <orderEntry type="library" scope="PROVIDED" name="parser (v3.3.11.1, ruby-3.4.8-p72) [gem]" level="application" />
     <orderEntry type="library" scope="PROVIDED" name="pp (v0.6.3, ruby-3.4.8-p72) [gem]" level="application" />
     <orderEntry type="library" scope="PROVIDED" name="prettyprint (v0.2.0, ruby-3.4.8-p72) [gem]" level="application" />
     <orderEntry type="library" scope="PROVIDED" name="prism (v1.9.0, ruby-3.4.8-p72) [gem]" level="application" />
     <orderEntry type="library" scope="PROVIDED" name="psych (v5.3.1, ruby-3.4.8-p72) [gem]" level="application" />
+    <orderEntry type="library" scope="PROVIDED" name="racc (v1.8.1, ruby-3.4.8-p72) [gem]" level="application" />
+    <orderEntry type="library" scope="PROVIDED" name="rainbow (v3.1.1, ruby-3.4.8-p72) [gem]" level="application" />
     <orderEntry type="library" scope="PROVIDED" name="rake (v13.4.2, ruby-3.4.8-p72) [gem]" level="application" />
     <orderEntry type="library" scope="PROVIDED" name="rdoc (v7.2.0, ruby-3.4.8-p72) [gem]" level="application" />
+    <orderEntry type="library" scope="PROVIDED" name="regexp_parser (v2.12.0, ruby-3.4.8-p72) [gem]" level="application" />
     <orderEntry type="library" scope="PROVIDED" name="reline (v0.6.3, ruby-3.4.8-p72) [gem]" level="application" />
     <orderEntry type="library" scope="PROVIDED" name="rspec (v3.13.2, ruby-3.4.8-p72) [gem]" level="application" />
     <orderEntry type="library" scope="PROVIDED" name="rspec-core (v3.13.6, ruby-3.4.8-p72) [gem]" level="application" />
     <orderEntry type="library" scope="PROVIDED" name="rspec-expectations (v3.13.5, ruby-3.4.8-p72) [gem]" level="application" />
     <orderEntry type="library" scope="PROVIDED" name="rspec-mocks (v3.13.8, ruby-3.4.8-p72) [gem]" level="application" />
     <orderEntry type="library" scope="PROVIDED" name="rspec-support (v3.13.7, ruby-3.4.8-p72) [gem]" level="application" />
+    <orderEntry type="library" scope="PROVIDED" name="rubocop (v1.86.1, ruby-3.4.8-p72) [gem]" level="application" />
+    <orderEntry type="library" scope="PROVIDED" name="rubocop-ast (v1.49.1, ruby-3.4.8-p72) [gem]" level="application" />
+    <orderEntry type="library" scope="PROVIDED" name="ruby-progressbar (v1.13.0, ruby-3.4.8-p72) [gem]" level="application" />
     <orderEntry type="library" scope="PROVIDED" name="stringio (v3.2.0, ruby-3.4.8-p72) [gem]" level="application" />
     <orderEntry type="library" scope="PROVIDED" name="telegram-bot-ruby (v2.7.0, ruby-3.4.8-p72) [gem]" level="application" />
     <orderEntry type="library" scope="PROVIDED" name="tsort (v0.2.0, ruby-3.4.8-p72) [gem]" level="application" />
+    <orderEntry type="library" scope="PROVIDED" name="unicode-display_width (v3.2.0, ruby-3.4.8-p72) [gem]" level="application" />
+    <orderEntry type="library" scope="PROVIDED" name="unicode-emoji (v4.2.0, ruby-3.4.8-p72) [gem]" level="application" />
     <orderEntry type="library" scope="PROVIDED" name="uri (v1.1.1, ruby-3.4.8-p72) [gem]" level="application" />
     <orderEntry type="library" scope="PROVIDED" name="yaml (v0.4.0, ruby-3.4.8-p72) [gem]" level="application" />
     <orderEntry type="library" scope="PROVIDED" name="zeitwerk (v2.7.5, ruby-3.4.8-p72) [gem]" level="application" />
