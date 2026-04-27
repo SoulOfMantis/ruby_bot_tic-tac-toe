@@ -172,6 +172,77 @@ RSpec.describe TicTacToe::Bot do
     end
   end
 
+# HANDLE MOVE
+
+describe '#handle_move' do
+  let(:player_x) { user }
+  let(:player_o) { user2 }
+
+  let(:game) do
+    TicTacToe::GameState.new(player_x, player_o, chat_id)
+  end
+
+  let(:callback) do
+    double('Callback',
+           from: current_user,
+           id: 'cb1',
+           data: 'move_0_0',
+           message: double('Msg', chat: double('Chat', id: chat_id)))
+  end
+
+  before do
+    bot.instance_variable_set(:@games, { chat_id => game })
+    allow(bot.api).to receive(:answer_callback_query)
+    allow(bot.api).to receive(:edit_message_text)
+    allow(bot.api).to receive(:edit_message_reply_markup)
+  end
+
+  context 'не его ход' do
+    let(:current_user) { player_o } 
+
+    it 'отказывает в ходе' do
+      expect(bot.api).to receive(:answer_callback_query).with(
+        callback_query_id: 'cb1',
+        text: 'Сейчас не ваш ход!'
+      )
+
+      bot.send(:handle_move, bot, callback)
+    end
+  end
+
+  context 'клетка уже занята' do
+    let(:current_user) { player_x }
+
+    before do
+      game.board[0][0] = 'X'
+    end
+
+    it 'не делает ход' do
+      expect(bot.api).to receive(:answer_callback_query)
+
+      bot.send(:handle_move, bot, callback)
+
+      expect(game.board[0][0]).to eq('X')
+    end
+  end
+
+  context 'валидный ход' do
+    let(:current_user) { player_x }
+
+    it 'делает ход и обновляет поле' do
+      bot.send(:handle_move, bot, callback)
+
+      expect(game.board[0][0]).to eq('X')
+    end
+
+    it 'меняет текущего игрока' do
+      bot.send(:handle_move, bot, callback)
+
+      expect(game.current_player).to eq('O')
+    end
+  end
+end
+
   # GAME STATUS
 
   describe '#check_game_status' do
