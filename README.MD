@@ -25,8 +25,8 @@
    cd ruby_bot_tic-tac-toe
 
 ##  Запуск бота
-* **осуществляется через bin/start
+* осуществляется через bin/start
 
 ##  Тестирование 
-* ** можно запустить в терминале через bundle exec rspec bot_spec.rb
+* можно запустить в терминале через bundle exec rspec bot_spec.rb
 
