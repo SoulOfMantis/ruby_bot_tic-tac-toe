@@ -6,9 +6,11 @@ require 'yaml'
 
 module TicTacToe
   class Bot
+    attr_reader :api
     def initialize(token)
       @token = token
       @games = {}
+      @stats = {}
     end
 
     def run
