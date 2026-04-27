@@ -13,6 +13,7 @@
 # Used by dotenv library to load environment variables.
 .env
 stats.yml
+games.yml
 
 # Ignore Byebug command history file.
 .byebug_history
