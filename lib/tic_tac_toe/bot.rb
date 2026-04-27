@@ -60,10 +60,10 @@ module TicTacToe
 
       bot.api.send_message chat_id: chat_id, text: "Игрок @#{user.username} покинул группу, признав поражение."
       case user.id
-      when game_in_chat.player_o_id
-        game_in_chat.winner = game_in_chat.player_x_id
-      when game_in_chat.player_x_id
-        game_in_chat.winner = game_in_chat.player_o_id
+      when game_in_chat.player_o
+        game_in_chat.winner = game_in_chat.player_x
+      when game_in_chat.player_x
+        game_in_chat.winner = game_in_chat.player_o
       end
       check_game_status bot, game_in_chat
     end
@@ -170,7 +170,7 @@ module TicTacToe
       @stats[chat_id].delete :waiting_for_game_start
       update_stats
       save_games
-      "Успешно присоединились к игре с #{get_user_by_id(bot, chat_id, @games[chat_id].player_x_id).first_name}!"
+      "Успешно присоединились к игре с #{get_user_by_id(bot, chat_id, @games[chat_id].player_x).first_name}!"
     end
 
     def handle_start(bot, chat_id, player_x, player_o)
@@ -189,16 +189,17 @@ module TicTacToe
       update_stats
 
       game = TicTacToe::GameState.new player_x.id, player_o.id, chat_id
-
+      @games[chat_id] = game
       msg = bot.api.send_message chat_id: chat_id,
                                  text: "Игра началась! Ходит ❌:
-                                 #{get_user_by_id(bot, chat_id, @games[chat_id].player_x_id).first_name}.",
+                                 #{get_user_by_id(bot, chat_id, @games[chat_id].player_x).first_name}.",
                                  reply_markup: render_keyboard(game.board)
       game.message_id = msg.message_id
       @games[chat_id] = game
     end
 
     def handle_move(bot, rq)
+      p rq
       chat_id = rq.message.chat.id
       user = rq.from
       game = @games[chat_id]
@@ -216,9 +217,9 @@ module TicTacToe
           chat_id: game.chat_id,
           message_id: game.message_id,
           text: "Ходит #{if game.current_player == 'X'
-                           "❌: #{get_user_by_id(bot, chat_id, @games[chat_id].player_x_id).first_name}"
+                           "❌: #{get_user_by_id(bot, chat_id, @games[chat_id].player_x).first_name}"
                          else
-                           "⭕: #{get_user_by_id(bot, chat_id, @games[chat_id].player_o_id).first_name}"
+                           "⭕: #{get_user_by_id(bot, chat_id, @games[chat_id].player_o).first_name}"
                          end}!"
         )
         bot.api.edit_message_reply_markup chat_id: game.chat_id,
@@ -235,19 +236,19 @@ module TicTacToe
 
       chat_id = game.chat_id
 
-      @stats[chat_id][game.player_o_id][:games_completed] += 1
-      @stats[chat_id][game.player_x_id][:games_completed] += 1
+      @stats[chat_id][game.player_o][:games_completed] += 1
+      @stats[chat_id][game.player_x][:games_completed] += 1
       @stats[chat_id][:general_stats][:total_games_completed] += 1
       if game.winner == 'Draw'
         text = 'Игра окончена! Ничья 🤝'
-        @stats[chat_id][game.player_x_id][:draws] += 1
-        @stats[chat_id][game.player_o_id][:draws] += 1
+        @stats[chat_id][game.player_x][:draws] += 1
+        @stats[chat_id][game.player_o][:draws] += 1
         @stats[chat_id][:general_stats][:total_draws] += 1
         update_stats
       else
 
-        winner = game.winner == 'X' ? game.player_x_id : game.player_o_id
-        loser = game.winner == 'X' ? game.player_o_id : game.player_x_id
+        winner = game.winner == 'X' ? game.player_x : game.player_o
+        loser = game.winner == 'X' ? game.player_o : game.player_x
         @stats[chat_id][winner.id][:wins] += 1
         @stats[chat_id][:general_stats][:last_winner] = winner
         @stats[chat_id][loser.id][:losses] += 1
