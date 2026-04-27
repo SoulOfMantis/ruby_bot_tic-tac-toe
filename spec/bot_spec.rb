@@ -23,8 +23,8 @@ RSpec.describe TicTacToe::Bot do
   let(:user) do
     double('User',
            id: 123,
-           first_name: 'Mawa',
-           username: 'mawa_dev')
+           first_name: 'Masha',
+           username: 'msha_dev')
   end
 
   let(:user2) do
