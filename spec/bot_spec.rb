@@ -49,9 +49,7 @@ RSpec.describe TicTacToe::Bot do
            message: double('Msg', chat: double('Chat', id: chat_id)))
   end
 
-  # -------------------------
   # PROCESS MESSAGE
-  # -------------------------
 
   describe '#process_message' do
     context '/my_stats без данных' do
@@ -99,9 +97,7 @@ RSpec.describe TicTacToe::Bot do
     end
   end
 
-  # -------------------------
   # WAITING FOR GAME
-  # -------------------------
 
   describe '#waiting_for_game_start' do
     before do
@@ -124,9 +120,7 @@ RSpec.describe TicTacToe::Bot do
     end
   end
 
-  # -------------------------
   # CALLBACK
-  # -------------------------
 
   describe '#process_callback' do
     before do
@@ -151,9 +145,7 @@ RSpec.describe TicTacToe::Bot do
     end
   end
 
-  # -------------------------
   # RENDER KEYBOARD
-  # -------------------------
 
   describe '#render_keyboard' do
     it 'создает 3x3 поле' do
@@ -180,9 +172,7 @@ RSpec.describe TicTacToe::Bot do
     end
   end
 
-  # -------------------------
   # GAME STATUS
-  # -------------------------
 
   describe '#check_game_status' do
     let(:player_x) { double('User', id: 1, first_name: 'X') }
@@ -231,9 +221,7 @@ RSpec.describe TicTacToe::Bot do
     end
   end
 
-  # -------------------------
   # FILE SAVE / LOAD
-  # -------------------------
 
   describe '#update_stats и #load_stats' do
     let(:test_file) { 'stats.yml' }
