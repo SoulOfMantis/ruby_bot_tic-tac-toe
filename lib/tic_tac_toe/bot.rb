@@ -140,7 +140,7 @@ module TicTacToe
     end
 
     def load_stats
-      @stats = YAML.load_file 'stats.yml'
+      @stats = YAML.load_file 'stats.yml' if File.exist? 'stats.yml'
       @stats ||= {}
     end
 
@@ -149,7 +149,7 @@ module TicTacToe
     end
 
     def load_games
-      games = YAML.load_file 'games.yml'
+      games = YAML.load_file 'games.yml' if File.exist? 'games.yml'
       @games = games&.transform_values { |game| GameState.from_hash game }
       @games ||= {}
     end
