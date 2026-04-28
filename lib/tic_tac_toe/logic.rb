@@ -16,29 +16,31 @@ module TicTacToe
       @message_id = nil
     end
 
-    def name_x
-      player_x.first_name
+    def to_hash
+      { board: board, current_player: current_player, player_x: player_x, player_o: player_o,
+        winner: winner, chat_id: chat_id, message_id: message_id }
     end
 
-    def name_o
-      player_o.first_name
+    def self.from_hash(hash)
+      game = GameState.new hash[:player_x], hash[:player_o], hash[:chat_id]
+      game.board = hash[:board]
+      game.current_player = hash[:current_player]
+      game.winner = hash[:winner]
+      game.message_id = hash[:message_id]
+      game
     end
 
-    def username_x
-      player_x.username
-    end
-
-    def username_o
-      player_o.username
+    def contains_user_id(user_id)
+      player_o == user_id || player_x == user_id
     end
 
     def valid_turn?(user)
       return false if @winner
 
       if @current_player == 'X'
-        @player_x == user
+        @player_x == user.id
       else
-        @player_o == user
+        @player_o == user.id
       end
     end
 

@@ -6,30 +6,18 @@ require 'yaml'
 
 module TicTacToe
   class Bot
-    attr_reader :api
     def initialize(token)
       @token = token
-      @games = {}
       @stats = {}
+      @games = {}
     end
 
     def run
       Telegram::Bot::Client.run(@token) do |bot|
         load_stats
-        @stats ||= {}
+        load_games
+        @games.each { |chat_id, game| restore_loaded_game bot, chat_id, game }
         bot.listen do |rq|
-          case rq
-          when Telegram::Bot::Types::Message
-            chat_id = rq.chat.id
-          when Telegram::Bot::Types::CallbackQuery
-            chat_id = rq.message.chat.id
-          end
-          @stats[chat_id] = {} unless @stats[chat_id]
-          unless @stats[chat_id][:general_stats]
-            @stats[chat_id][:general_stats] =
-              { total_games_started: 0, total_games_completed: 0, total_draws: 0 }
-          end
-          update_stats
           case rq
           when Telegram::Bot::Types::Message
             process_message bot, rq
@@ -37,21 +25,37 @@ module TicTacToe
             process_callback bot, rq
           end
         end
+        update_stats
       end
     end
 
     private
 
+    def restore_loaded_game(bot, chat_id, game)
+      create_stats_if_missing chat_id
+      check_game_status bot, game
+      return unless game
+
+      current_player = game.current_player == 'X' ? game.player_x : game.player_o
+      msg = bot.api.send_message chat_id: chat_id,
+                                 text: 'Похоже, произошла ошибка. Игра была восстановлена. Ходит ' \
+                                 "#{game.current_player == 'X' ? '❌' : '⭕'}: " \
+                                 "#{get_user_by_id(bot, chat_id, current_player).first_name}.",
+                                 reply_markup: render_keyboard(game.board)
+      game.message_id = msg.message_id
+    end
+
     def process_callback(bot, callback)
       chat_id = callback.message.chat.id
       user = callback.from
+      create_stats_if_missing chat_id
       if @games[chat_id].nil?
         if callback.data == 'join'
           bot.api.answer_callback_query callback_query_id: callback.id,
                                         text: waiting_for_game_start(bot, user, chat_id)
         end
-      elsif @games[chat_id].player_x == user || @games[chat_id].player_o == user
-        handle_move(bot, callback)
+      elsif @games[chat_id].contains_user_id user.id
+        handle_move bot, callback
       end
     end
 
@@ -60,6 +64,7 @@ module TicTacToe
 
       chat_id = message.chat.id
       user = message.from
+      create_stats_if_missing chat_id
       if message.text.include? '/start_game'
         waiting_for_game_start bot, user, chat_id
       elsif message.text.include? '/my_stats'
@@ -99,10 +104,31 @@ module TicTacToe
         end
         if stats[:last_loser]
           text += "\n@#{(get_user_by_id bot, chat_id, stats[:last_loser]).username}" \
-          '-- последний, кто потерпел поражение в этой группе!'
+          ' -- последний, кто потерпел поражение в этой группе!'
         end
         bot.api.send_message chat_id: chat_id, text: text
+      elsif message.text.include? '/challenge'
+        if @stats[chat_id][:general_stats][:champion].nil?
+          bot.api.send_message chat_id: chat_id, text: 'В этой группе пока нет чемпиона!'
+        elsif @stats[chat_id][:general_stats][:champion] == user.id
+          bot.api.send_message chat_id: chat_id, text: 'Вы и есть чемпион!'
+        elsif @games[chat_id]
+          bot.api.send_message chat_id: chat_id, text: 'В этой группе уже идёт игра!'
+        else
+          bot.api.send_message chat_id: chat_id,
+                               text: "@#{user.username} вызывает на дуэль чемпиона " \
+          "@#{get_user_by_id(bot, chat_id, @stats[chat_id][:general_stats][:champion]).username}!"
+          handle_start bot, chat_id, user.id, @stats[chat_id][:general_stats][:champion]
+        end
       end
+    end
+
+    def create_stats_if_missing(chat_id)
+      @stats[chat_id] = {} unless @stats[chat_id]
+      return if @stats[chat_id][:general_stats]
+
+      @stats[chat_id][:general_stats] =
+        { total_games_started: 0, total_games_completed: 0, total_draws: 0 }
     end
 
     def get_user_by_id(bot, chat_id, user_id)
@@ -114,7 +140,18 @@ module TicTacToe
     end
 
     def load_stats
-      @stats = YAML.load_file 'stats.yml'
+      @stats = YAML.load_file 'stats.yml' if File.exist? 'stats.yml'
+      @stats ||= {}
+    end
+
+    def save_games
+      File.write 'games.yml', @games.transform_values(&:to_hash).to_yaml
+    end
+
+    def load_games
+      games = YAML.load_file 'games.yml' if File.exist? 'games.yml'
+      @games = games&.transform_values { |game| GameState.from_hash game }
+      @games ||= {}
     end
 
     def waiting_for_game_start(bot, user, chat_id)
@@ -133,33 +170,38 @@ module TicTacToe
       end
       return 'В этом чате уже идёт игра!' if @games[chat_id]
 
-      handle_start bot, chat_id, get_user_by_id(bot, chat_id, @stats[chat_id][:waiting_for_game_start]), user
+      handle_start bot, chat_id, @stats[chat_id][:waiting_for_game_start], user.id
       @stats[chat_id].delete :waiting_for_game_start
-      update_stats
-      "Успешно присоединились к игре с #{@games[chat_id].name_x}!"
+      "Успешно присоединились к игре с #{get_user_by_id(bot, chat_id, @games[chat_id].player_x).first_name}!"
+    end
+
+    def create_player_stats_if_missing(chat_id, player_x, player_o)
+      unless @stats[chat_id][player_x]
+        @stats[chat_id][player_x] =
+          { wins: 0, losses: 0, draws: 0, games_started: 0, games_completed: 0 }
+      end
+      return if @stats[chat_id][player_o]
+
+      @stats[chat_id][player_o] =
+        { wins: 0, losses: 0, draws: 0, games_started: 0, games_completed: 0 }
     end
 
     def handle_start(bot, chat_id, player_x, player_o)
-      unless @stats[chat_id][player_x.id]
-        @stats[chat_id][player_x.id] =
-          { wins: 0, losses: 0, draws: 0, games_started: 0, games_completed: 0 }
-      end
-      unless @stats[chat_id][player_o.id]
-        @stats[chat_id][player_o.id] =
-          { wins: 0, losses: 0, draws: 0, games_started: 0, games_completed: 0 }
-      end
-
-      @stats[chat_id][player_x.id][:games_started] += 1
-      @stats[chat_id][player_o.id][:games_started] += 1
+      create_player_stats_if_missing chat_id, player_x, player_o
+      @stats[chat_id][player_x][:games_started] += 1
+      @stats[chat_id][player_o][:games_started] += 1
       @stats[chat_id][:general_stats][:total_games_started] += 1
       update_stats
 
       game = TicTacToe::GameState.new player_x, player_o, chat_id
-
-      msg = bot.api.send_message chat_id: chat_id, text: "Игра началась! Ходит ❌: #{game.name_x}.",
+      @games[chat_id] = game
+      msg = bot.api.send_message chat_id: chat_id,
+                                 text: 'Игра началась! Ходит ❌: ' \
+                                 "#{get_user_by_id(bot, chat_id, player_x).first_name}.",
                                  reply_markup: render_keyboard(game.board)
       game.message_id = msg.message_id
       @games[chat_id] = game
+      save_games
     end
 
     def handle_move(bot, rq)
@@ -179,14 +221,18 @@ module TicTacToe
         bot.api.edit_message_text(
           chat_id: game.chat_id,
           message_id: game.message_id,
-          text: "Ходит #{game.current_player == 'X' ? "❌: #{game.name_x}" : "⭕: #{game.name_o}"}!"
+          text: "Ходит #{if game.current_player == 'X'
+                           "❌: #{get_user_by_id(bot, chat_id, @games[chat_id].player_x).first_name}"
+                         else
+                           "⭕: #{get_user_by_id(bot, chat_id, @games[chat_id].player_o).first_name}"
+                         end}!"
         )
         bot.api.edit_message_reply_markup chat_id: game.chat_id,
                                           message_id: game.message_id,
                                           reply_markup: render_keyboard(game.board)
-        check_game_status(bot, game)
+        check_game_status bot, game
       end
-
+      save_games
       bot.api.answer_callback_query callback_query_id: rq.id
     end
 
@@ -194,34 +240,34 @@ module TicTacToe
       return unless game.winner
 
       chat_id = game.chat_id
-
-      @stats[chat_id][game.player_o.id][:games_completed] += 1
-      @stats[chat_id][game.player_x.id][:games_completed] += 1
+      create_player_stats_if_missing chat_id, game.player_x, game.player_o
+      @stats[chat_id][game.player_o][:games_completed] += 1
+      @stats[chat_id][game.player_x][:games_completed] += 1
       @stats[chat_id][:general_stats][:total_games_completed] += 1
       if game.winner == 'Draw'
         text = 'Игра окончена! Ничья 🤝'
-        @stats[chat_id][game.player_x.id][:draws] += 1
-        @stats[chat_id][game.player_o.id][:draws] += 1
+        @stats[chat_id][game.player_x][:draws] += 1
+        @stats[chat_id][game.player_o][:draws] += 1
         @stats[chat_id][:general_stats][:total_draws] += 1
         update_stats
       else
 
         winner = game.winner == 'X' ? game.player_x : game.player_o
         loser = game.winner == 'X' ? game.player_o : game.player_x
-        @stats[chat_id][winner.id][:wins] += 1
-        @stats[chat_id][:general_stats][:last_winner] = winner.id
-        @stats[chat_id][loser.id][:losses] += 1
-        @stats[chat_id][:general_stats][:last_loser] = loser.id
-        if @stats[chat_id][:general_stats][:champion].nil? || @stats[chat_id][:general_stats][:champion] == loser.id
-          @stats[chat_id][:general_stats][:champion] = winner.id
+        @stats[chat_id][winner][:wins] += 1
+        @stats[chat_id][:general_stats][:last_winner] = winner
+        @stats[chat_id][loser][:losses] += 1
+        @stats[chat_id][:general_stats][:last_loser] = loser
+        if @stats[chat_id][:general_stats][:champion].nil? || @stats[chat_id][:general_stats][:champion] == loser
+          @stats[chat_id][:general_stats][:champion] = winner
         end
         update_stats
         win_icon  = game.winner == 'X' ? '❌' : '⭕'
         lose_icon = game.winner == 'X' ? '⭕' : '❌'
 
         text = "🎉 ИГРА ОКОНЧЕНА! 🎉\n\n" \
-               "🏆 Победитель: #{winner.first_name} (#{win_icon})\n" \
-               "💀 Проигравший: #{loser.first_name} (#{lose_icon})"
+               "🏆 Победитель: #{get_user_by_id(bot, chat_id, winner).first_name} (#{win_icon})\n" \
+               "💀 Проигравший: #{get_user_by_id(bot, chat_id, loser).first_name} (#{lose_icon})"
       end
       bot.api.send_message chat_id: chat_id, text: text
       @games.delete chat_id
