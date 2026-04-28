@@ -39,7 +39,7 @@ module TicTacToe
       current_player = game.current_player == 'X' ? game.player_x : game.player_o
       msg = bot.api.send_message chat_id: chat_id,
                                  text: 'Похоже, произошла ошибка. Игра была восстановлена. Ходит ' \
-                                 "#{game.current_player == 'X' ? '❌' : '⭕'} : " \
+                                 "#{game.current_player == 'X' ? '❌' : '⭕'}: " \
                                  "#{get_user_by_id(bot, chat_id, current_player).first_name}.",
                                  reply_markup: render_keyboard(game.board)
       game.message_id = msg.message_id
@@ -134,6 +134,8 @@ module TicTacToe
       elsif message.text.include? '/challenge'
         if @stats[chat_id][:general_stats][:champion].nil?
           bot.api.send_message chat_id: chat_id, text: 'В этой группе пока нет чемпиона!'
+        elsif @stats[chat_id][:general_stats][:champion] == user.id
+            bot.api.send_message chat_id: chat_id, text: 'Вы и есть чемпион!'
         elsif @games[chat_id]
           bot.api.send_message chat_id: chat_id, text: 'В этой группе уже идёт игра!'
         else
