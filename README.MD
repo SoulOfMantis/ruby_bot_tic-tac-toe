@@ -16,3 +16,18 @@
 * **Библиотека:** [telegram-bot-ruby](https://github.com/atkr/telegram-bot-ruby)
 * **Тестирование:** RSpec (Moсks & Doubles для имитации API)
 * **CI/CD:** GitHub Actions (автоматическая проверка кода при каждом Pull Request)
+
+##   Установка 
+
+1. **Клонирование репозитория**:
+   ```bash
+   git clone [https://github.com/SoulOfMantis/ruby_bot_tic-tac-toe.git](https://github.com/SoulOfMantis/ruby_bot_tic-tac-toe.git)
+   cd ruby_bot_tic-tac-toe
+2. Создать файлик .env с токеном бота (по примеру .env.example)
+
+##  Запуск бота
+* осуществляется через bin/start
+
+##  Тестирование 
+* можно запустить в терминале через bundle exec rspec bot_spec.rb
+
