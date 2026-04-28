@@ -128,15 +128,18 @@ module TicTacToe
         end
         if stats[:last_loser]
           text += "\n@#{(get_user_by_id bot, chat_id, stats[:last_loser]).username}" \
-          '-- последний, кто потерпел поражение в этой группе!'
+          ' -- последний, кто потерпел поражение в этой группе!'
         end
         bot.api.send_message chat_id: chat_id, text: text
       elsif message.text.include? '/challenge'
-        if @stats[chat_id][:champion].nil?
+        if @stats[chat_id][:general_stats][:champion].nil?
           bot.api.send_message chat_id: chat_id, text: 'В этой группе пока нет чемпиона!'
         elsif @games[chat_id]
           bot.api.send_message chat_id: chat_id, text: 'В этой группе уже идёт игра!'
         else
+          bot.api.send_message chat_id: chat_id,
+                               text: "@#{user.username} вызывает на дуэль чемпиона " \
+          "@#{get_user_by_id(bot, chat_id, @stats[chat_id][:general_stats][:champion]).username}!"
           handle_start bot, chat_id, user.id, @stats[chat_id][:general_stats][:champion]
         end
       end
@@ -215,7 +218,7 @@ module TicTacToe
       game = TicTacToe::GameState.new player_x, player_o, chat_id
       @games[chat_id] = game
       msg = bot.api.send_message chat_id: chat_id,
-                                 text: 'Игра началась! Ходит ❌:' \
+                                 text: 'Игра началась! Ходит ❌: ' \
                                  "#{get_user_by_id(bot, chat_id, player_x).first_name}.",
                                  reply_markup: render_keyboard(game.board)
       game.message_id = msg.message_id
