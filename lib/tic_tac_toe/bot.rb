@@ -8,10 +8,12 @@ module TicTacToe
   class Bot
     def initialize(token)
       @token = token
+      @stats = {}
+      @games = {}
     end
 
     def run
-      Telegram::Bot::Client.run(@token, { allowed_updates: %w[message callback_query chat_member] }) do |bot|
+      Telegram::Bot::Client.run(@token) do |bot|
         load_stats
         load_games
         @games.each { |chat_id, game| restore_loaded_game bot, chat_id, game }
@@ -21,8 +23,6 @@ module TicTacToe
             process_message bot, rq
           when Telegram::Bot::Types::CallbackQuery
             process_callback bot, rq
-          when Telegram::Bot::Types::ChatMemberLeft
-            process_chat_member_leaving bot, rq
           end
         end
         update_stats
@@ -57,30 +57,6 @@ module TicTacToe
       elsif @games[chat_id].contains_user_id user.id
         handle_move bot, callback
       end
-    end
-
-    def process_chat_member_leaving(bot, chat_member_left_info)
-      chat_id = chat_member_left_info.chat.id
-      user = chat_member_left_info.user
-      game_in_chat = @games[chat_id]
-      return unless user.id == @stats[chat_id][:champion] || game_in_chat.contains_user_id(user.id)
-
-      if user.id == @stats[chat_id][:champion]
-        bot.api.send_message chat_id: chat_id, text: "Чемпион @#{user.username} отказался от титула и покинул группу."
-        @stats[chat_id][:champion] = nil
-      end
-      @stats[chat_id][:waiting_for_game_start] = nil if @stats[chat_id][:waiting_for_game_start] == user.id
-
-      return unless game_in_chat.contains_user_id user.id
-
-      bot.api.send_message chat_id: chat_id, text: "Игрок @#{user.username} покинул группу, признав поражение."
-      case user.id
-      when game_in_chat.player_o
-        game_in_chat.winner = game_in_chat.player_x
-      when game_in_chat.player_x
-        game_in_chat.winner = game_in_chat.player_o
-      end
-      check_game_status bot, game_in_chat
     end
 
     def process_message(bot, message)
@@ -135,7 +111,7 @@ module TicTacToe
         if @stats[chat_id][:general_stats][:champion].nil?
           bot.api.send_message chat_id: chat_id, text: 'В этой группе пока нет чемпиона!'
         elsif @stats[chat_id][:general_stats][:champion] == user.id
-            bot.api.send_message chat_id: chat_id, text: 'Вы и есть чемпион!'
+          bot.api.send_message chat_id: chat_id, text: 'Вы и есть чемпион!'
         elsif @games[chat_id]
           bot.api.send_message chat_id: chat_id, text: 'В этой группе уже идёт игра!'
         else
